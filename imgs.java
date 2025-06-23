@@ -9,7 +9,65 @@ public class imgs {
     public static void main(String[] args) {
     SwingUtilities.invokeLater(() -> new imgs().createAndShowGUI());
 }
- 
+
+
+// Adiciona suporte para visualização em tela cheia e salvar imagem exibida
+private boolean isFullScreen = false;
+private JFrame fullScreenFrame = null;
+
+private void toggleFullScreen(BufferedImage img) {
+    if (!isFullScreen) {
+        fullScreenFrame = new JFrame();
+        fullScreenFrame.setUndecorated(true);
+        fullScreenFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+        JLabel fullScreenLabel = new JLabel(new ImageIcon(img.getScaledInstance(
+            Toolkit.getDefaultToolkit().getScreenSize().width,
+            Toolkit.getDefaultToolkit().getScreenSize().height,
+            Image.SCALE_SMOOTH)));
+        fullScreenLabel.setHorizontalAlignment(JLabel.CENTER);
+        fullScreenLabel.setVerticalAlignment(JLabel.CENTER);
+        fullScreenFrame.add(fullScreenLabel);
+        fullScreenFrame.addKeyListener(new KeyAdapter() {
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                    fullScreenFrame.dispose();
+                    isFullScreen = false;
+                }
+            }
+        });
+        fullScreenFrame.setVisible(true);
+        isFullScreen = true;
+    }
+}
+
+// Adiciona botão para salvar imagem exibida
+private JButton saveButton;
+private File currentImageFile = null;
+
+private void setupSaveButton(JPanel parentPanel) {
+    saveButton = new JButton("Salvar Imagem");
+    saveButton.setEnabled(false);
+    saveButton.addActionListener(e -> saveCurrentImage());
+    parentPanel.add(saveButton, BorderLayout.SOUTH);
+}
+
+private void saveCurrentImage() {
+    if (currentImageFile != null) {
+        try {
+            BufferedImage img = ImageIO.read(currentImageFile);
+            JFileChooser chooser = new JFileChooser();
+            chooser.setSelectedFile(new File("imagem_salva.png"));
+            int result = chooser.showSaveDialog(null);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File saveFile = chooser.getSelectedFile();
+                ImageIO.write(img, "png", saveFile);
+                JOptionPane.showMessageDialog(null, "Imagem salva com sucesso!");
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, "Erro ao salvar imagem.");
+        }
+    }
+}
 private JPanel thumbnailsPanel;
 private JLabel imageLabel;
  
