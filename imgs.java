@@ -4,157 +4,175 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import javax.imageio.ImageIO;
 import javax.swing.*;
- 
+
 public class imgs {
+    // Variáveis para controle de tela cheia
+    private boolean isFullScreen = false;
+    private JFrame fullScreenFrame = null;
+
     public static void main(String[] args) {
-    SwingUtilities.invokeLater(() -> new imgs().createAndShowGUI());
-}
-
-
-// Adiciona suporte para visualização em tela cheia e salvar imagem exibida
-private boolean isFullScreen = false;
-private JFrame fullScreenFrame = null;
-
-private void toggleFullScreen(BufferedImage img) {
-    if (!isFullScreen) {
-        fullScreenFrame = new JFrame();
-        fullScreenFrame.setUndecorated(true);
-        fullScreenFrame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-        JLabel fullScreenLabel = new JLabel(new ImageIcon(img.getScaledInstance(
-            Toolkit.getDefaultToolkit().getScreenSize().width,
-            Toolkit.getDefaultToolkit().getScreenSize().height,
-            Image.SCALE_SMOOTH)));
-        fullScreenLabel.setHorizontalAlignment(JLabel.CENTER);
-        fullScreenLabel.setVerticalAlignment(JLabel.CENTER);
-        fullScreenFrame.add(fullScreenLabel);
-        fullScreenFrame.addKeyListener(new KeyAdapter() {
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-                    fullScreenFrame.dispose();
-                    isFullScreen = false;
-                }
-            }
-        });
-        fullScreenFrame.setVisible(true);
-        isFullScreen = true;
+        // Inicia a interface gráfica na thread de eventos do Swing
+        SwingUtilities.invokeLater(() -> new imgs().createAndShowGUI());
     }
-}
 
-// Adiciona botão para salvar imagem exibida
-private JButton saveButton;
-private File currentImageFile = null;
+    // Método para alternar entre tela cheia e modo normal
+    private void toggleFullScreen(BufferedImage img) {
+        if (!isFullScreen) {
+            fullScreenFrame = new JFrame();
+            fullScreenFrame.setUndecorated(true); // Remove bordas da janela
+            fullScreenFrame.setExtendedState(JFrame.MAXIMIZED_BOTH); // Maximiza a janela
 
-private void setupSaveButton(JPanel parentPanel) {
-    saveButton = new JButton("Salvar Imagem");
-    saveButton.setEnabled(false);
-    saveButton.addActionListener(e -> saveCurrentImage());
-    parentPanel.add(saveButton, BorderLayout.SOUTH);
-}
+            // Cria um rótulo para exibir a imagem em tela cheia
+            JLabel fullScreenLabel = new JLabel(new ImageIcon(img.getScaledInstance(
+                Toolkit.getDefaultToolkit().getScreenSize().width,
+                Toolkit.getDefaultToolkit().getScreenSize().height,
+                Image.SCALE_SMOOTH)));
+            fullScreenLabel.setHorizontalAlignment(JLabel.CENTER);
+            fullScreenLabel.setVerticalAlignment(JLabel.CENTER);
+            fullScreenFrame.add(fullScreenLabel);
 
-private void saveCurrentImage() {
-    if (currentImageFile != null) {
-        try {
-            BufferedImage img = ImageIO.read(currentImageFile);
-            JFileChooser chooser = new JFileChooser();
-            chooser.setSelectedFile(new File("imagem_salva.png"));
-            int result = chooser.showSaveDialog(null);
-            if (result == JFileChooser.APPROVE_OPTION) {
-                File saveFile = chooser.getSelectedFile();
-                ImageIO.write(img, "png", saveFile);
-                JOptionPane.showMessageDialog(null, "Imagem salva com sucesso!");
-            }
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(null, "Erro ao salvar imagem.");
+            // Adiciona um listener para fechar a tela cheia ao pressionar ESC
+            fullScreenFrame.addKeyListener(new KeyAdapter() {
+                public void keyPressed(KeyEvent e) {
+                    if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                        fullScreenFrame.dispose(); // Fecha a janela de tela cheia
+                        isFullScreen = false; // Atualiza o estado
+                    }
+                }
+            });
+
+            fullScreenFrame.setVisible(true); // Torna a janela visível
+            isFullScreen = true; // Atualiza o estado
         }
     }
-}
-private JPanel thumbnailsPanel;
-private JLabel imageLabel;
- 
-private void createAndShowGUI() {
-    JFrame frame = new JFrame("Visualizador de Imagens");
-    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    frame.setLayout(new BorderLayout());
- 
-    JButton openButton = new JButton("Abrir Pasta de Imagens");
-    thumbnailsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-    JScrollPane scrollPane = new JScrollPane(thumbnailsPanel);
-    imageLabel = new JLabel("", JLabel.CENTER);
- 
-    openButton.addActionListener(e -> openFolder());
- 
-    JPanel topPanel = new JPanel(new BorderLayout());
-    topPanel.add(openButton, BorderLayout.NORTH);
-    topPanel.add(scrollPane, BorderLayout.CENTER);
- 
-    frame.add(topPanel, BorderLayout.NORTH);
-    frame.add(imageLabel, BorderLayout.CENTER);
-frame.getContentPane().setBackground(new Color(245, 245, 250));
-topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-thumbnailsPanel.setBackground(new Color(235, 235, 245));
-scrollPane.setPreferredSize(new Dimension(600, 120));
-openButton.setBackground(new Color(70, 130, 180));
-openButton.setForeground(Color.WHITE);
-openButton.setFocusPainted(false);
-openButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
-imageLabel.setBorder(BorderFactory.createLineBorder(new Color(180, 180, 200), 2));
-imageLabel.setOpaque(true);
-imageLabel.setBackground(Color.WHITE);
-    frame.setSize(800, 600);
-    frame.setLocationRelativeTo(null);
-    frame.setVisible(true);
-}
- 
-private void openFolder() {
-    JFileChooser chooser = new JFileChooser();
-    chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-    int result = chooser.showOpenDialog(null);
-    if (result == JFileChooser.APPROVE_OPTION) {
-        File folder = chooser.getSelectedFile();
-        showThumbnails(folder);
+
+    // Botão para salvar a imagem exibida
+    private JButton saveButton;
+    private File currentImageFile = null;
+
+    // Configura o botão de salvar
+    private void setupSaveButton(JPanel parentPanel) {
+        saveButton = new JButton("Salvar Imagem");
+        saveButton.setEnabled(false); // Desabilita o botão inicialmente
+        saveButton.addActionListener(e -> saveCurrentImage()); // Ação ao clicar
+        parentPanel.add(saveButton, BorderLayout.SOUTH); // Adiciona o botão ao painel
     }
-}
- 
-private void showThumbnails(File folder) {
-    thumbnailsPanel.removeAll();
-    File[] files = folder.listFiles((dir, name) -> {
-        String lower = name.toLowerCase();
-        return lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png") || lower.endsWith(".gif") || lower.endsWith(".bmp");
-    });
-    if (files != null) {
-        for (File file : files) {
+
+    // Método para salvar a imagem atual
+    private void saveCurrentImage() {
+        if (currentImageFile != null) {
             try {
-                BufferedImage img = ImageIO.read(file);
-                if (img != null) {
-                    ImageIcon icon = new ImageIcon(img.getScaledInstance(80, 80, Image.SCALE_SMOOTH));
-                    JLabel thumb = new JLabel(icon);
-                    thumb.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
-                    thumb.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-                    thumb.addMouseListener(new MouseAdapter() {
-                        public void mouseClicked(MouseEvent e) {
-                            showLargeImage(file);
-                        }
-                    });
-                    thumbnailsPanel.add(thumb);
+                BufferedImage img = ImageIO.read(currentImageFile); // Lê a imagem atual
+                JFileChooser chooser = new JFileChooser();
+                chooser.setSelectedFile(new File("imagem_salva.png")); // Nome padrão para salvar
+                int result = chooser.showSaveDialog(null);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    File saveFile = chooser.getSelectedFile();
+                    ImageIO.write(img, "png", saveFile); // Salva a imagem
+                    JOptionPane.showMessageDialog(null, "Imagem salva com sucesso!"); // Mensagem de sucesso
                 }
             } catch (Exception ex) {
-                // Ignore invalid images
+                JOptionPane.showMessageDialog(null, "Erro ao salvar imagem."); // Mensagem de erro
             }
         }
     }
-    thumbnailsPanel.revalidate();
-    thumbnailsPanel.repaint();
-}
- 
-private void showLargeImage(File file) {
-    try {
-        BufferedImage img = ImageIO.read(file);
-        if (img != null) {
-            Image scaled = img.getScaledInstance(400, 400, Image.SCALE_SMOOTH);
-            imageLabel.setIcon(new ImageIcon(scaled));
-        }
-    } catch (Exception ex) {
-        imageLabel.setIcon(null);
+
+    private JPanel thumbnailsPanel; // Painel para miniaturas
+    private JLabel imageLabel; // Rótulo para exibir a imagem
+
+    // Cria e exibe a interface gráfica
+    private void createAndShowGUI() {
+        JFrame frame = new JFrame("Visualizador de Imagens");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(new BorderLayout());
+
+        JButton openButton = new JButton("Abrir Pasta de Imagens");
+        thumbnailsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JScrollPane scrollPane = new JScrollPane(thumbnailsPanel);
+        imageLabel = new JLabel("", JLabel.CENTER);
+
+        // Ação para abrir a pasta de imagens
+        openButton.addActionListener(e -> openFolder());
+
+        // Painel superior para o botão e miniaturas
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.add(openButton, BorderLayout.NORTH);
+        topPanel.add(scrollPane, BorderLayout.CENTER);
+
+        // Adiciona componentes ao frame
+        frame.add(topPanel, BorderLayout.NORTH);
+        frame.add(imageLabel, BorderLayout.CENTER);
+        frame.getContentPane().setBackground(new Color(245, 245, 250)); // Cor de fundo
+        topPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Espaçamento
+        thumbnailsPanel.setBackground(new Color(235, 235, 245)); // Cor do painel de miniaturas
+        scrollPane.setPreferredSize(new Dimension(600, 120)); // Tamanho do scroll
+        openButton.setBackground(new Color(70, 130, 180)); // Cor do botão
+        openButton.setForeground(Color.WHITE); // Cor do texto
+        openButton.setFocusPainted(false); // Remove o foco visual
+        openButton.setFont(new Font("Segoe UI", Font.BOLD, 14)); // Fonte do botão
+        imageLabel.setBorder(BorderFactory.createLineBorder(new Color(180, 180, 200), 2)); // Borda da imagem
+        imageLabel.setOpaque(true);
+        imageLabel.setBackground(Color.WHITE); // Cor de fundo da imagem
+        frame.setSize(800, 600); // Tamanho da janela
+        frame.setLocationRelativeTo(null); // Centraliza a janela
+        frame.setVisible(true); // Torna a janela visível
     }
-}  
+
+    // Método para abrir uma pasta e exibir suas imagens
+    private void openFolder() {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY); // Apenas diretórios
+        int result = chooser.showOpenDialog(null);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File folder = chooser.getSelectedFile();
+            showThumbnails(folder); // Exibe as miniaturas das imagens
+        }
+    }
+
+    // Exibe miniaturas das imagens na pasta selecionada
+    private void showThumbnails(File folder) {
+        thumbnailsPanel.removeAll(); // Limpa o painel de miniaturas
+        File[] files = folder.listFiles((dir, name) -> {
+            String lower = name.toLowerCase();
+            // Filtra arquivos de imagem
+            return lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png") || lower.endsWith(".gif") || lower.endsWith(".bmp");
+        });
+        if (files != null) {
+            for (File file : files) {
+                try {
+                    BufferedImage img = ImageIO.read(file); // Lê a imagem
+                    if (img != null) {
+                        // Cria um ícone a partir da imagem
+                        ImageIcon icon = new ImageIcon(img.getScaledInstance(80, 80, Image.SCALE_SMOOTH));
+                        JLabel thumb = new JLabel(icon);
+                        thumb.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5)); // Espaçamento
+                        thumb.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)); // Cursor de mão
+                        thumb.addMouseListener(new MouseAdapter() {
+                            public void mouseClicked(MouseEvent e) {
+                                showLargeImage(file); // Exibe a imagem grande ao clicar
+                            }
+                        });
+                        thumbnailsPanel.add(thumb); // Adiciona a miniatura ao painel
+                    }
+                } catch (Exception ex) {
+                    // Ignora imagens inválidas
+                }
+            }
+        }
+        thumbnailsPanel.revalidate(); // Atualiza o painel
+        thumbnailsPanel.repaint(); // Repaint do painel
+    }
+
+    // Exibe a imagem grande ao clicar na miniatura
+    private void showLargeImage(File file) {
+        try {
+            BufferedImage img = ImageIO.read(file); // Lê a imagem
+            if (img != null) {
+                Image scaled = img.getScaledInstance(400, 400, Image.SCALE_SMOOTH); // Redimensiona a imagem
+                imageLabel.setIcon(new ImageIcon(scaled)); // Define o ícone da imagem
+            }
+        } catch (Exception ex) {
+            imageLabel.setIcon(null); // Limpa o ícone em caso de erro
+        }
+    }
 }
