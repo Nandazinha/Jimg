@@ -46,37 +46,6 @@ public class imgs {
         }
     }
 
-    // Botão para salvar a imagem exibida
-    private JButton saveButton;
-    private File currentImageFile = null;
-
-    // Configura o botão de salvar
-    private void setupSaveButton(JPanel parentPanel) {
-        saveButton = new JButton("Salvar Imagem");
-        saveButton.setEnabled(false); // Desabilita o botão inicialmente
-        saveButton.addActionListener(e -> saveCurrentImage()); // Ação ao clicar
-        parentPanel.add(saveButton, BorderLayout.SOUTH); // Adiciona o botão ao painel
-    }
-
-    // Método para salvar a imagem atual
-    private void saveCurrentImage() {
-        if (currentImageFile != null) {
-            try {
-                BufferedImage img = ImageIO.read(currentImageFile); // Lê a imagem atual
-                JFileChooser chooser = new JFileChooser();
-                chooser.setSelectedFile(new File("imagem_salva.png")); // Nome padrão para salvar
-                int result = chooser.showSaveDialog(null);
-                if (result == JFileChooser.APPROVE_OPTION) {
-                    File saveFile = chooser.getSelectedFile();
-                    ImageIO.write(img, "png", saveFile); // Salva a imagem
-                    JOptionPane.showMessageDialog(null, "Imagem salva com sucesso!"); // Mensagem de sucesso
-                }
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(null, "Erro ao salvar imagem."); // Mensagem de erro
-            }
-        }
-    }
-
     private JPanel thumbnailsPanel; // Painel para miniaturas
     private JLabel imageLabel; // Rótulo para exibir a imagem
 
